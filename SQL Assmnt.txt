@@ -1,0 +1,305 @@
+SQL ASSESSMENT - SYED SUFIAAN - JFSJD COURSE
+
+-- 2.A
+-- top 25 schools
+SELECT email_domain,
+	count(*) AS students
+FROM users
+GROUP BY email_domain
+ORDER BY 2 DESC
+LIMIT 25;
+
+
+-- 2.B
+-- NYC edu learners
+SELECT count(*)
+FROM users
+WHERE city = 'New York'
+AND email_domain LIKE '%.edu';
+
+
+-- 2.C
+-- mobile users count
+
+WITH mobile_app_users AS (
+SELECT
+	CASE
+	WHEN mobile_app = 'mobile-user'
+	THEN 1
+	ELSE NULL
+	END AS mobile_users
+FROM users)
+SELECT COUNT(mobile_users) AS mobile_users_count
+FROM mobile_app_users;
+
+-- 3
+-- Sign up count by hour
+SELECT strftime('%H', sign_up_at) AS 'sign_up_hour',
+	count(*) AS 'sign_up_count'
+FROM users
+GROUP BY 1;
+
+-- 4.A
+-- Do different schools (.edu domains) prefer different courses?
+-- how many and which ones, sort by the most complete to the less.
+WITH courses_by_school AS (
+SELECT u.email_domain,
+	CASE 
+	WHEN p.learn_cpp = ''
+	THEN 0
+	ELSE 1
+	END AS cpp,
+	CASE 
+	WHEN p.learn_sql = ''
+	THEN 0
+	ELSE 1
+	END AS sql,
+	CASE 
+	WHEN p.learn_html = ''
+	THEN 0
+	ELSE 1
+	END AS html,
+	CASE 
+	WHEN p.learn_javascript = ''
+	THEN 0
+	ELSE 1
+	END AS js,
+	CASE 
+	WHEN p.learn_java = ''
+	THEN 0
+	ELSE 1
+	END AS java
+FROM users AS 'u'
+JOIN progress AS 'p'
+	ON u.user_id = p.user_id
+WHERE email_domain LIKE '%.edu')
+SELECT email_domain,
+	cpp+sql+html+js+java AS total_courses,
+	CASE
+	WHEN cpp = 1 THEN 'yes'
+	ELSE '-'
+	END AS cpp_course,
+	CASE
+	WHEN sql = 1 THEN 'yes'
+	ELSE '-'
+	END AS sql_course,
+	CASE
+	WHEN html = 1 THEN 'yes'
+	ELSE '-'
+	END AS html_course,
+	CASE
+	WHEN js = 1 THEN 'yes'
+	ELSE '-'
+	END AS js_course,
+	CASE
+	WHEN java = 1 THEN 'yes'
+	ELSE '-'
+	END AS java_course
+FROM courses_by_school
+GROUP BY 1
+ORDER BY total_courses DESC;
+
+
+-- 4.B
+-- What courses are the New Yorkers students taking?
+-- By order of preference
+WITH courses_by_city AS (
+SELECT u.city,
+	CASE 
+	WHEN p.learn_cpp = ''
+	THEN 0
+	ELSE 1
+	END AS cpp,
+	CASE 
+	WHEN p.learn_sql = ''
+	THEN 0
+	ELSE 1
+	END AS sql,
+	CASE 
+	WHEN p.learn_html = ''
+	THEN 0
+	ELSE 1
+	END AS html,
+	CASE 
+	WHEN p.learn_javascript = ''
+	THEN 0
+	ELSE 1
+	END AS js,
+	CASE 
+	WHEN p.learn_java = ''
+	THEN 0
+	ELSE 1
+	END AS java
+FROM users AS 'u'
+LEFT JOIN progress AS 'p'
+	ON u.user_id = p.user_id
+WHERE email_domain LIKE '%.edu'
+AND u.city = 'New York')
+SELECT 'cpp' AS course,
+	SUM(cpp) AS students
+FROM courses_by_city
+UNION
+SELECT 'sql' AS course,
+	SUM(sql) AS students
+FROM courses_by_city
+UNION
+SELECT 'html' AS course,
+	SUM(html) AS students
+FROM courses_by_city
+UNION
+SELECT 'js' AS course,
+	SUM(js) AS students
+FROM courses_by_city
+UNION
+SELECT 'java' AS course,
+	SUM(java) AS students
+FROM courses_by_city
+ORDER BY 2 DESC;
+
+-- 4.C
+-- What courses are the Chicago students taking?
+-- By order of preference
+
+WITH courses_by_city AS (
+SELECT u.city,
+	CASE 
+	WHEN p.learn_cpp = ''
+	THEN 0
+	ELSE 1
+	END AS cpp,
+	CASE 
+	WHEN p.learn_sql = ''
+	THEN 0
+	ELSE 1
+	END AS sql,
+	CASE 
+	WHEN p.learn_html = ''
+	THEN 0
+	ELSE 1
+	END AS html,
+	CASE 
+	WHEN p.learn_javascript = ''
+	THEN 0
+	ELSE 1
+	END AS js,
+	CASE 
+	WHEN p.learn_java = ''
+	THEN 0
+	ELSE 1
+	END AS java
+FROM users AS 'u'
+LEFT JOIN progress AS 'p'
+	ON u.user_id = p.user_id
+WHERE email_domain LIKE '%.edu'
+AND u.city = 'Chicago')
+SELECT 'cpp' AS course,
+	SUM(cpp) AS students
+FROM courses_by_city
+UNION
+SELECT 'sql' AS course,
+	SUM(sql) AS students
+FROM courses_by_city
+UNION
+SELECT 'html' AS course,
+	SUM(html) AS students
+FROM courses_by_city
+UNION
+SELECT 'js' AS course,
+	SUM(js) AS students
+FROM courses_by_city
+UNION
+SELECT 'java' AS course,
+	SUM(java) AS students
+FROM courses_by_city
+ORDER BY 2 DESC;
+
+-- 4.BONUS
+-- NYC and Chicago students preferences in a single table
+WITH courses_by_city AS (
+SELECT u.city,
+	CASE 
+		WHEN p.learn_cpp = ''
+		THEN 0
+		ELSE 1
+	END AS cpp,
+	CASE 
+		WHEN p.learn_sql = ''
+		THEN 0
+		ELSE 1
+	END AS sql,
+	CASE 
+		WHEN p.learn_html = ''
+		THEN 0
+		ELSE 1
+	END AS html,
+	CASE 
+		WHEN p.learn_javascript = ''
+		THEN 0
+		ELSE 1
+	END AS js,
+	CASE 
+		WHEN p.learn_java = ''
+		THEN 0
+		ELSE 1
+	END AS java
+FROM users AS 'u'
+LEFT JOIN progress AS 'p'
+	ON u.user_id = p.user_id
+WHERE email_domain LIKE '%.edu'),
+nyc AS (
+SELECT *
+FROM courses_by_city
+WHERE city = 'New York'),
+nyc_students AS (
+SELECT 'cpp' AS course,
+	SUM(cpp) AS students
+FROM nyc
+UNION
+SELECT 'sql' AS course,
+	SUM(sql) AS students
+FROM nyc
+UNION
+SELECT 'html' AS course,
+	SUM(html) AS students
+FROM nyc
+UNION
+SELECT 'js' AS course,
+	SUM(js) AS students
+FROM nyc
+UNION
+SELECT 'java' AS course,
+	SUM(java) AS students
+FROM nyc
+ORDER BY 2 DESC),
+chicago AS (
+SELECT *
+FROM courses_by_city
+WHERE city = 'Chicago'),
+chicago_students AS (
+SELECT 'cpp' AS course,
+	SUM(cpp) AS students
+FROM chicago
+UNION
+SELECT 'sql' AS course,
+	SUM(sql) AS students
+FROM chicago
+UNION
+SELECT 'html' AS course,
+	SUM(html) AS students
+FROM chicago
+UNION
+SELECT 'js' AS course,
+	SUM(js) AS students
+FROM chicago
+UNION
+SELECT 'java' AS course,
+	SUM(java) AS students
+FROM chicago
+ORDER BY 2 DESC)
+SELECT nycs.course,
+	nycs.students AS 'nyc_students',
+	cs.students AS 'chicago_students'
+FROM nyc_students nycs
+JOIN chicago_students cs
+	ON nycs.course = cs.course
+ORDER BY 3 DESC;
